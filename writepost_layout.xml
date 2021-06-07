@@ -23,12 +23,6 @@
             android:textSize="18sp" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/changeImage_Button_W"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Button" />
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -37,6 +31,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" >
+
+            <Button
+                android:id="@+id/changeImage_Button_W"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="사진 선택" />
 
             <TableLayout
                 android:layout_width="match_parent"
@@ -176,11 +176,17 @@
 
                 <EditText
                     android:id="@+id/price_TextFiled_W"
-                    android:layout_width="wrap_content"
+                    android:layout_width="321dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:ems="10"
-                    android:inputType="textPersonName" />
+                    android:inputType="numberPassword" />
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="₩"
+                    android:textSize="26sp" />
 
             </LinearLayout>
 

@@ -18,8 +18,6 @@ public class ChatClient {
 
     Scanner scn = null;
 
-    FileSender fs;
-
     OutputStream out = null; // OutputStream 객체 생성
     DataOutputStream dout = null; // DataOutputStream 객체 생성
 
@@ -34,9 +32,6 @@ public class ChatClient {
     ChatClient() {
         try {
             socket = new Socket("LocalHost", 55555); // 소켓 연결
-
-            // 파일 전송용 클래스
-            fs = new FileSender(socket);
 
             out = socket.getOutputStream();
             dout = new DataOutputStream(out);
@@ -134,88 +129,5 @@ public class ChatClient {
                 }
             }
         }
-    }
-}
-
-//파일 전송용 클래스
-class FileSender {
-    Socket socket;
-    DataOutputStream dout;
-    FileInputStream fis;
-    BufferedInputStream bin;
-
-    public FileSender(Socket socket) {
-        this.socket = socket;
-
-        try {
-            // 데이터 전송용 스트림 생성
-            dout = new DataOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void sendFile(File file) {
-        try {
-            //파일전송을 서버에 알린다.('file' 구분자 전송)
-            dout.writeUTF("file");
-            dout.flush();
-
-            //전송할 파일을 읽어서 Socket Server에 전송
-            String result = fileRead(dout, file);
-            System.out.println("result : " + result);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally { //리소스 초기화
-            try {
-                dout.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    String fileRead(DataOutputStream dout, File file) {
-        String result = null;
-
-        try {
-            // 파일을 읽어서 서버에 전송
-            fis = new FileInputStream(file);
-            bin = new BufferedInputStream(fis);
-
-            int len;
-            int size = 4096;
-            byte[] data = new byte[size];
-            while ((len = bin.read(data)) != -1) {
-                dout.write(data, 0, len);
-            }
-
-            // 서버에 전송
-            dout.flush();
-
-            DataInputStream dis = new DataInputStream(socket.getInputStream());
-            result = dis.readUTF();
-            if (result.equals("SUCCESS")) {
-                System.out.println("파일 전송 작업을 완료하였습니다.");
-                System.out.println("보낸 파일의 사이즈 : " + file.length());
-            } else {
-                System.out.println("파일 전송 실패!.");
-            }
-
-            result = "SUCCESS";
-        } catch (IOException e) {
-            e.printStackTrace();
-            result = "ERROR";
-        } finally {
-            try {
-                fis.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return result;
     }
 }

@@ -16,12 +16,13 @@ import android.widget.Spinner;
 import android.widget.TableRow;
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class WritePostPage extends AppCompatActivity {
     final int PICTURE_REQUEST_CODE = 100;
 
-    String[] tag = {"sale", "buy"}; // 스피너 재료
+    String[] tag = {"판매", "구매"}; // 스피너 재료
     Button complete_Button; // 완료 버튼
     EditText title_TextField; // 제목 텍스트 필드
     Spinner tag_Spinner; // 태그 스피너
@@ -41,7 +42,10 @@ public class WritePostPage extends AppCompatActivity {
 
     DatabaseManagement dm; // 데이터베이스 객체
     User user;
-    ChatClient cc;
+    FileUtils fu = new FileUtils(this);
+
+    static int count = 0;
+    static ArrayList<String> uris = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,21 +55,9 @@ public class WritePostPage extends AppCompatActivity {
         set();
     }
 
-    private void sendPicture(Uri imgUri) {
-        FileUtils fu = new FileUtils(this);
-
-        String imagePath = fu.getPath(imgUri);
-
-        File imageFile = new File(imagePath);
-        // 소켓 파일 전송 코드 추가
-
-        // cc.fs.sendFile(imageFile);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        int count;
 
         TableRow.LayoutParams ll = new TableRow.LayoutParams(200, 200);
 
@@ -81,8 +73,8 @@ public class WritePostPage extends AppCompatActivity {
                 //이미지 URI 를 이용하여 이미지뷰에 순서대로 세팅한다.
                 if (clipData != null) {
                     count = clipData.getItemCount();
-
-                    Uri sUri = null;
+                    uris = new ArrayList<>();
+                    Uri sUri;
 
                     for (int i = 0; i < count; i++) {
                         sUri = clipData.getItemAt(i).getUri();
@@ -92,55 +84,55 @@ public class WritePostPage extends AppCompatActivity {
                             image1.setLayoutParams(ll);
                             image1.setPadding(0, 0, 0, 20);
                             image1.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         } else if ((i + 1) == 2) {
                             image2.setImageResource(0);
                             image2.setLayoutParams(ll);
                             image2.setPadding(0, 0, 0, 20);
                             image2.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         } else if ((i + 1) == 3) {
                             image3.setImageResource(0);
                             image3.setLayoutParams(ll);
                             image3.setPadding(0, 0, 0, 20);
                             image3.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         } else if ((i + 1) == 4) {
                             image4.setImageResource(0);
                             image4.setLayoutParams(ll);
                             image4.setPadding(0, 0, 0, 20);
                             image4.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         } else if ((i + 1) == 5) {
                             image5.setImageResource(0);
                             image5.setLayoutParams(ll);
                             image5.setPadding(0, 0, 0, 20);
                             image5.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         } else if ((i + 1) == 6) {
                             image6.setImageResource(0);
                             image6.setLayoutParams(ll);
                             image6.setPadding(0, 0, 0, 20);
                             image6.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         } else if ((i + 1) == 7) {
                             image7.setImageResource(0);
                             image7.setLayoutParams(ll);
                             image7.setPadding(0, 0, 0, 20);
                             image7.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         } else if ((i + 1) == 8) {
                             image8.setImageResource(0);
                             image8.setLayoutParams(ll);
                             image8.setPadding(0, 0, 0, 20);
                             image8.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         } else if ((i + 1) == 9) {
                             image9.setImageResource(0);
                             image9.setLayoutParams(ll);
                             image9.setPadding(0, 0, 0, 20);
                             image9.setImageURI(sUri);
-                            sendPicture(sUri);
+                            uris.add(fu.getPath(sUri));
                         }
                     }
                 } else if (uri != null) {
@@ -168,9 +160,9 @@ public class WritePostPage extends AppCompatActivity {
             public void onClick(android.view.View v) {
                 // 입력된 게시글 정보를 체크한 후 DB에 저장
                 Calendar c = Calendar.getInstance(); // 현재 시간 정보
-                String timeNow = c.get(Calendar.YEAR) + "y " + (c.get(Calendar.MONTH) + 1) + "m " + c.get(Calendar.DATE) + "d, " + c.get(Calendar.HOUR_OF_DAY) + "h " + c.get(Calendar.MINUTE) + "m " + c.get(Calendar.SECOND) + "s";
+                String timeNow = c.get(Calendar.YEAR) + "년 " + (c.get(Calendar.MONTH) + 1) + "월 " + c.get(Calendar.DATE) + "일, " + c.get(Calendar.HOUR_OF_DAY) + "시 " + c.get(Calendar.MINUTE) + "분 " + c.get(Calendar.SECOND) + "초";
 
-                dm.postRegistration(user.getId(), title_TextField.getText().toString(), tag_Spinner.getSelectedItem().toString(), price_TextField.getText().toString(), contents_TextField.getText().toString(), timeNow);
+                dm.postRegistration(user.getId(), title_TextField.getText().toString(), tag_Spinner.getSelectedItem().toString().replace("판매", "sale").replace("구매", "buy"), price_TextField.getText().toString(), contents_TextField.getText().toString(), timeNow);
 
                 finish();
             }

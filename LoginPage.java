@@ -99,7 +99,7 @@ public class LoginPage extends AppCompatActivity {
 
     void set() {
         dm = new DatabaseManagement(this);
-        cc = new ChatClient();
+        //cc = new ChatClient();
 
         id_TextField = findViewById(R.id.id_TextField_L); // 아이디 입력란 정의
         password_TextField = findViewById(R.id.password_TextField_L); // 비밀번호 입력란 정의

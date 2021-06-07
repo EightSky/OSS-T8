@@ -35,8 +35,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     String create_Posts_Table() {
         String create_Posts_Table = "create table if not exists posts_Information (id text nou null , title text not null , " +
-                "price text not null , contents text not null , write_time text not null , tag text not null, image1 blob not null, " +
-                "image2 blob, image3 blob, image4 blob, image5 blob, image6 blob, image7 blob, image8 blob, image9 blob);";
+                "price text not null , contents text not null , write_time text not null , tag text not null, image1 text not null, " +
+                "image2 text, image3 text, image4 text, image5 text, image6 text, image7 text, image8 text, image9 text);";
 
         return create_Posts_Table;
     }

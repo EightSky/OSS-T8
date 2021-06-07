@@ -1,68 +1,79 @@
+package com.example.opensourcesoftwareproject_team;
+// https://whitememo.tistory.com/241
+// https://citynetc.tistory.com/150 - 사진 저장
+// https://yoo-hyeok.tistory.com/16?category=708422
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+
 import java.io.ByteArrayOutputStream;
-import java.sql.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 
-// DB 관리를 위한 클래스
-public class DatabaseManagement {
-    Connection con = null; // Connection 객체
-    Statement stmt = null; // Statement 객체
-    String url = "jdbc:mysql://localhost/stock?serverTimezone=Asia/Seoul";
-    String user = "root"; // id
-    String passwd = "!bh08152562"; // password
+public class DatabaseManagement implements Serializable {
+    static SQLiteDatabase db;
+    static DBHelper helper;
 
-    DatabaseManagement() {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection(url, user, passwd);
-            stmt = con.createStatement();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public DatabaseManagement(Context context) {
+        helper = new DBHelper(context, "OSSWP.db", null, 1);
+        db = helper.getWritableDatabase();
     }
 
-    // 테이블 생성 메소드
-    // 총 5개의 테이블의 존재여부를 확인한 후 존재하지 않는 경우에만 테이블 생성
-    void craeteTable() {
-        String create_Member_Table = "create table if not exists member_Information (id varchar(50) primary key , " +
-                "password varchar(50) not null , name varchar(50) not null , gender varchar(30) not null , email varchar(90) not null , phone_number varchar(50) not null);";
-        String create_Posts_Table = "create table if not exists posts_Information (id varchar(50) nou null , title varchar(100) not null , " +
-                "price varchar(30) not null , contents varchar(200) not null , write_time varchar(60) not null , tag varchar(50) not null, image1 blob not null, " +
-                "image2 blob, image3 blob, image4 blob, image5 blob, image6 blob, image7 blob, image8 blob, image9 blob);";
+    // 선택한 게시글 정보
+    ArrayList<String> getPostInformation(String id, String title) {
+        String query = "select * from posts_Information where id=\"" + id + "\" and title=\"" + title + "\"";
+        ArrayList<String> columns = new ArrayList<>();
 
-        try {
-            stmt.executeUpdate(create_Member_Table);
-            stmt.executeUpdate(create_Posts_Table);
-        } catch (SQLException e) {
-            e.printStackTrace();
+        Cursor c = db.rawQuery(query, null);
+
+        if (c != null) {
+            if (c.moveToNext()) {
+                columns.add(c.getString(2)); //
+                columns.add(c.getString(3)); //
+                columns.add(c.getString(6)); //
+            }
+
+            for (int i = 7; i < 15; i++) {
+                String uri = c.getString(i);
+                columns.add(uri);
+            }
+            columns.add(String.valueOf(c.getPosition())); // 행 번호
+
+            c.close();
         }
 
+        return columns;
     }
 
     // 로그인 정보 확인 메소드
     boolean login(String id, String password) {
+        String query = "select id from member_Information where id=\"" + id + "\";";
+        Cursor c = db.rawQuery(query, null);
         boolean rt = false;
-        try {
-            String query = "select id from member_Information where id=\"" + id + "\";";
-            ResultSet rs = stmt.executeQuery(query);
 
-            if (rs.next()) { // 해당 아이디가 존재할 경우
-                query = "select password from member_Information where id=\"" + id + "\";";
+        if (c.moveToNext()) { // 해당 아이디가 존재할 경우
+            query = "select password from member_Information where id=\"" + id + "\";";
+            c = db.rawQuery(query, null);
 
-                rs = stmt.executeQuery(query);
+            if (c.moveToNext()) { // 해당 아이디를 사용하는 유저 비밀번호가 존재할 경우
 
-
-                if (rs.next()) { // 해당 아이디를 사용하는 유저 비밀번호가 존재할 경우
-
-                    if (rs.getString(rs.getString("password")).equals(password)) { // 해당 비밀번호와 전달받은 비밀번호가 동일한 경우
-                        rt = true; // 비밀번호 일치
-                    }
+                if (c.getString(c.getColumnIndex("password")).equals(password)) { // 해당 비밀번호와 전달받은 비밀번호가 동일한 경우
+                    rt = true; // 비밀번호 일치
+                } else { // 일치하지 않을 경우
+                    rt = false; // 비밀번호 불일치
                 }
+            } else {
+                rt = false; // 해당 아이디가 존재하지만 비밀번호가 존재하지 않음 - 일반적인 경우로는 불가능
             }
-            rs.close();
-
-        } catch (SQLException e) {
-            System.out.println("로그인 정보 확인 오류");
+        } else {
+            rt = false; // 아이디가 존재하지 않음
         }
+        c.close();
 
         return rt;
     }
@@ -72,7 +83,7 @@ public class DatabaseManagement {
         String query = "delete from posts_Information where id=\"" + id + "\" and title=\"" + title + "\"";
 
         try {
-            stmt.executeQuery(query);
+            db.execSQL(query);
         } catch (Exception e) {
             System.out.println("게시글 삭제 오류");
         }
@@ -84,7 +95,7 @@ public class DatabaseManagement {
         if (double_Check(id)) {
             try {
                 String query = "insert into member_Information values (\"" + id + "\", \"" + password + "\", \"" + name + "\", \"" + gender + "\", \"" + email + "\", \"" + phone_number + "\")";
-                stmt.executeQuery(query);
+                db.execSQL(query);
             } catch (Exception e) {
                 System.out.println("회원정보 저장 오류");
             }
@@ -96,29 +107,24 @@ public class DatabaseManagement {
     // 아이디 중복 확인 메소드
     boolean double_Check(String id) {
         String query = "select id from member_Information where id=\"" + id + "\"";
-        boolean value = false;
-        ResultSet rs;
-        try {
-            rs = stmt.executeQuery(query);
+        Cursor c = db.rawQuery(query, null);
 
-            if (rs.next()) { // 해당 아이디가 이미 존재할 경우
-                rs.close();
-                value = false;
-            } else { // 존재하지 않을 경우
-                rs.close();
-                value = true;
-            }
-        } catch (SQLException e) {
-            System.out.println("아이디 중복 확인 오류");
+        if (c.moveToNext()) { // 해당 아이디가 이미 존재할 경우
+            c.close();
+
+            return false;
+        } else { // 존재하지 않을 경우
+            c.close();
+
+            return true;
         }
-        return value;
     }
 
     // 태그에 맞는 게시글 불러오기
     ArrayList<String> getPostInfomation(String tag) {
         String query;
         ArrayList<String> columns = new ArrayList<String>();
-        ResultSet rs = null;
+        Cursor c = null;
 
         if (tag.equals("")) {
             query = "select * from posts_Information";
@@ -126,26 +132,23 @@ public class DatabaseManagement {
             query = "select * from posts_Information where tag=\"" + tag + "\"";
         }
 
-        ResultSetMetaData rsmd = null;
-
         try {
-            rs = stmt.executeQuery(query);
-
-            if (rs != null) {
-                rsmd = rs.getMetaData();
-
-                while (rs.next()) {
-                    columns.add(rs.getString(1)); // id or name 가져오기
-                    columns.add(rs.getString(2)); // title 가져오기
-                    columns.add(rs.getString(5)); // time 가져오기
-                    columns.add(rs.getString(6)); // tag 가져오기
-                    columns.add(String.valueOf(rsmd.getColumnCount())); // 행 번호
-                }
-
-                rs.close();
-            }
+            c = db.rawQuery(query, null);
         } catch (Exception e) {
             System.out.println("게시글이 없습니다.");
+        }
+
+        if (c != null) {
+            while (c.moveToNext()) {
+                columns.add(c.getString(0)); // id or name 가져오기
+                columns.add(c.getString(1)); // title 가져오기
+                columns.add(c.getString(4)); // time 가져오기
+                columns.add(c.getString(5)); // tag 가져오기
+                columns.add(c.getString(6)); // 첫번째 사진 경로
+                columns.add(String.valueOf(c.getPosition())); // 행 번호
+            }
+
+            c.close();
         }
 
         return columns; // 게시글 정보가 들어있는 문자열 배열 반환
@@ -154,30 +157,28 @@ public class DatabaseManagement {
     // 내 게시글 불러오기
     ArrayList<String> getPostInfomation_Id(String id) {
         ArrayList<String> columns = new ArrayList<String>();
-        ResultSet rs = null;
+        Cursor c = null;
 
         String query = "select * from posts_Information where id=\"" + id + "\"";
 
-        ResultSetMetaData rsmd = null;
 
         try {
-            rs = stmt.executeQuery(query);
-
-            if (rs != null) {
-                rsmd = rs.getMetaData();
-
-                while (rs.next()) {
-                    columns.add(rs.getString(1)); // id or name 가져오기
-                    columns.add(rs.getString(2)); // title 가져오기
-                    columns.add(rs.getString(5)); // time 가져오기
-                    columns.add(rs.getString(6)); // tag 가져오기
-                    columns.add(String.valueOf(rsmd.getColumnCount())); // 행 번호
-                }
-
-                rs.close();
-            }
+            c = db.rawQuery(query, null);
         } catch (Exception e) {
             System.out.println("게시글이 없습니다.");
+        }
+
+        if (c != null) {
+            while (c.moveToNext()) {
+                columns.add(c.getString(0)); // id or name 가져오기
+                columns.add(c.getString(1)); // title 가져오기
+                columns.add(c.getString(4)); // time 가져오기
+                columns.add(c.getString(5)); // tag 가져오기
+                columns.add(c.getString(6)); // 첫번째 사진 경로
+                columns.add(String.valueOf(c.getPosition())); // 행 번호
+            }
+
+            c.close();
         }
 
         return columns; // 게시글 정보가 들어있는 문자열 배열 반환
@@ -186,73 +187,77 @@ public class DatabaseManagement {
     // 게시글 검색 메소드
     ArrayList<String> getPostInfomation_Title(String title) {
         ArrayList<String> columns = new ArrayList<String>();
-        ResultSet rs = null;
+        Cursor c = null;
 
         String query = "select * from posts_Information where title like \"%" + title + "%\"";
 
-        ResultSetMetaData rsmd = null;
-
         try {
-            rs = stmt.executeQuery(query);
-
-            if (rs != null) {
-                rsmd = rs.getMetaData();
-
-                while (rs.next()) {
-                    columns.add(rs.getString(1)); // id or name 가져오기
-                    columns.add(rs.getString(2)); // title 가져오기
-                    columns.add(rs.getString(5)); // time 가져오기
-                    columns.add(rs.getString(6)); // tag 가져오기
-                    columns.add(String.valueOf(rsmd.getColumnCount())); // 행 번호
-                }
-
-                rs.close();
-            }
+            c = db.rawQuery(query, null);
         } catch (Exception e) {
             System.out.println("게시글이 없습니다.");
+        }
+
+        if (c != null) {
+            while (c.moveToNext()) {
+                columns.add(c.getString(0)); // id or name 가져오기
+                columns.add(c.getString(1)); // title 가져오기
+                columns.add(c.getString(4)); // time 가져오기
+                columns.add(c.getString(5)); // tag 가져오기
+                columns.add(c.getString(6)); // 첫번째 사진 경로
+                columns.add(String.valueOf(c.getPosition())); // 행 번호
+            }
+
+            c.close();
         }
 
         return columns; // 게시글 정보가 들어있는 문자열 배열 반환
     }
 
     void postRegistration(String id, String title, String tag, String price, String content, String time) {
-        String query = "insert into posts_Information values (\"" + id + "\", \"" + title + "\", \"" + price + "\", \"" + content + "\", \"" + time + "\", \"" + tag + "\")";
+        String query = "insert into posts_Information values (\"" + id + "\", \"" + title + "\", \"" + price + "\", \"" + content + "\", \"" + time + "\", \"" + tag;
 
-        try {
-            stmt.executeQuery(query);
-        } catch (SQLException e) {
-            System.out.println("게시글 추가 오류");
+        int count = WritePostPage.count;
+
+        System.out.println("카운트 : " + count);
+
+        for (int i = 0; i < count; i++) {
+            query += "\", \"";
+            query += WritePostPage.uris.get(i);
         }
+        for (int i = 0; i < 9 - count; i++) {
+            System.out.println("반복 횟수 : " + i);
+            query += "\", \"";
+            query += "null";
+        }
+        query += "\")";
+
+        db.execSQL(query);
     }
 
     void updateUserInformation(String id, String password, String name, String email, String phoneNumber) {
         String query = "update member_Information set password = \"" + password + "\", name = \"" + name + "\"," +
                 " email = \"" + email + "\", " + "phone_number = \"" + phoneNumber + "\" where id = \"" + id + "\"";
 
-        try {
-            stmt.executeQuery(query);
-        } catch (SQLException e) {
-            System.out.println("유저 정보 업데이트 오류");
-        }
+        db.execSQL(query);
     }
 
     String getUserInformation(String id) {
         String query = "select name, email from member_Information where id=\"" + id + "\"";
         String value = "";
-        ResultSet rs = null;
+        Cursor c = null;
 
         try {
-            rs = stmt.executeQuery(query);
-
-            if (rs != null) {
-                if (rs.next()) {
-                    value += rs.getString(1);
-                    value += ",";
-                    value += rs.getString(2);
-                }
-            }
+            c = db.rawQuery(query, null);
         } catch (Exception e) {
             System.out.println("유저 정보가 없습니다.");
+        }
+
+        if (c != null) {
+            if (c.moveToNext()) {
+                value += c.getString(0);
+                value += ",";
+                value += c.getString(1);
+            }
         }
 
         return value;
@@ -261,18 +266,18 @@ public class DatabaseManagement {
     String getUser_Gender(String id) {
         String query = "select gender from member_Information where id = \"" + id + "\"";
         String value = "";
-        ResultSet rs = null;
+        Cursor c = null;
 
         try {
-            rs = stmt.executeQuery(query);
-
-            if (rs != null) {
-                if (rs.next()) {
-                    value += rs.getString(1);
-                }
-            }
+            c = db.rawQuery(query, null);
         } catch (Exception e) {
             System.out.println("유저 성별 정보가 없습니다.");
+        }
+
+        if (c != null) {
+            if (c.moveToNext()) {
+                value += c.getString(0);
+            }
         }
 
         return value;
@@ -280,28 +285,25 @@ public class DatabaseManagement {
 
     int getPostsCount(String tag) {
         String query;
-        ResultSet rs = null;
+        Cursor c = null;
         int count = 0;
 
         if (tag.equals("")) {
-            query = "select count(*) from posts_Information";
+            query = "select * from posts_Information";
         } else {
-            query = "select count(*) from posts_Information where tag=\"" + tag + "\"";
+            query = "select * from posts_Information where tag=\"" + tag + "\"";
         }
 
         try {
-            rs = stmt.executeQuery(query);
-
-            if (rs != null) {
-                if (rs.next()) {
-                    count = rs.getInt(1);
-
-                }
-                rs.close();
-            }
-
+            c = db.rawQuery(query, null);
         } catch (Exception e) {
             System.out.println("게시글이 없습니다.");
+        }
+
+        if (c != null) {
+            count = c.getCount();
+
+            c.close();
         }
 
         return count;

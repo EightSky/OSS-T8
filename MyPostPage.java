@@ -109,17 +109,18 @@ public class MyPostPage extends AppCompatActivity {
         list = null;
         list = new ArrayList<Post>();
 
-        for (int i = postInfomation.size(); i > 0; i -= 5) {
-            count = Integer.parseInt(postInfomation.get(i + 4));
+        for (int i = postInfomation.size() - 1; i >= 0; i -= 6) {
+            count = Integer.parseInt(postInfomation.get(i));
 
-            if (count / 10 == (page - 1)) {
-                list.add(new Post(postInfomation.get(i), postInfomation.get(i + 1), postInfomation.get(i + 2),
-                        "", postInfomation.get(i + 3).replace("sale", "판매").replace("buy", "구매")));
+            if ((count - (i / 6)) / 10 == (page - 1)) {
+                list.add(new Post(postInfomation.get(i - 5), postInfomation.get(i - 4), postInfomation.get(i - 3),
+                        "", postInfomation.get(i - 2).replace("sale", "판매").replace("buy", "구매"),
+                        postInfomation.get(i - 1), null, null, null, null, null, null, null, null));
             }
         }
 
         System.out.println("페이지 수" + dm.getPostsCount("") / 10);
 
-        postList.setAdapter(new Recycler_Adapter(list)); // 리사이클러뷰에 Recycler_Adapter 객체 지정
+        postList.setAdapter(new Recycler_Adapter(list, dm, this)); // 리사이클러뷰에 Recycler_Adapter 객체 지정
     }
 }
