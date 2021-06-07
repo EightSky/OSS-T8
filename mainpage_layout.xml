@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Space
+            android:layout_width="288dp"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/myPage_Button_Mp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="My Page"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="609dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/postList_Recyclerview_Mpp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"></androidx.recyclerview.widget.RecyclerView>
+
+    </ScrollView>
+
+    <com.lakue.pagingbutton.LakuePagingButton
+        android:id="@+id/lpb_buttonlist_Mpp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Space
+            android:layout_width="7dp"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/all_Button_Mp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="전체글"
+            android:textSize="18sp" />
+
+        <Space
+            android:layout_width="15dp"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/buy_Button_Mp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="구매글"
+            android:textSize="18sp" />
+
+        <Space
+            android:layout_width="15dp"
+            android:layout_height="match_parent" />
+
+        <Button
+            android:id="@+id/sale_Button_Mp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="판매글"
+            android:textSize="18sp" />
+
+        <Space
+            android:layout_width="15dp"
+            android:layout_height="match_parent" />
+
+        <Button
+            android:id="@+id/writePost_Button_Mp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="글쓰기"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+</LinearLayout>
